@@ -1,0 +1,73 @@
+"","REGION","DISTRITO","POBLACION","TIPO_CAMA","CANTIDAD_CAMAS","CANTIDAD_MEDICOS"
+"1","PAMPEANA","Buenos Aires",17196396,"Aislamiento y casos leves",37337,46223
+"2","PAMPEANA","Buenos Aires",17196396,"Casos graves",57151,46223
+"3","PAMPEANA","Buenos Aires",17196396,"Casos graves Neo",2180,46223
+"4","PAMPEANA","CABA",3068043,"Aislamiento y casos leves",16173,48447
+"5","PAMPEANA","CABA",3068043,"Casos graves",5095,48447
+"6","PAMPEANA","CABA",3068043,"Casos graves Neo",1000,48447
+"7","NOA","Catamarca",408152,"Aislamiento y casos leves",1444,1042
+"8","NOA","Catamarca",408152,"Casos graves",539,1042
+"9","NOA","Catamarca",408152,"Casos graves Neo",185,1042
+"10","NEA","Chaco",1180477,"Aislamiento y casos leves",2814,2656
+"11","NEA","Chaco",1180477,"Casos graves",1421,2656
+"12","NEA","Chaco",1180477,"Casos graves Neo",195,2656
+"13","PATAGONIA","Chubut",598380,"Aislamiento y casos leves",1870,1794
+"14","PATAGONIA","Chubut",598380,"Casos graves",457,1794
+"15","PATAGONIA","Chubut",598380,"Casos graves Neo",74,1794
+"16","NEA","Corrientes",1101084,"Aislamiento y casos leves",3178,3470
+"17","NEA","Corrientes",1101084,"Casos graves",583,3470
+"18","NEA","Corrientes",1101084,"Casos graves Neo",177,3470
+"19","PAMPEANA","Córdoba",3683937,"Aislamiento y casos leves",9311,16283
+"20","PAMPEANA","Córdoba",3683937,"Casos graves",13360,16283
+"21","PAMPEANA","Córdoba",3683937,"Casos graves Neo",402,16283
+"22","PAMPEANA","Entre Rios",1360443,"Aislamiento y casos leves",4048,3977
+"23","PAMPEANA","Entre Rios",1360443,"Casos graves",1941,3977
+"24","PAMPEANA","Entre Rios",1360443,"Casos graves Neo",88,3977
+"25","NEA","Formosa",595129,"Aislamiento y casos leves",1910,1093
+"26","NEA","Formosa",595129,"Casos graves",171,1093
+"27","NEA","Formosa",595129,"Casos graves Neo",74,1093
+"28","NOA","Jujuy",753891,"Aislamiento y casos leves",2390,1674
+"29","NOA","Jujuy",753891,"Casos graves",397,1674
+"30","NOA","Jujuy",753891,"Casos graves Neo",113,1674
+"31","PAMPEANA","La Pampa",352378,"Aislamiento y casos leves",887,1058
+"32","PAMPEANA","La Pampa",352378,"Casos graves",204,1058
+"33","PAMPEANA","La Pampa",352378,"Casos graves Neo",65,1058
+"34","CUYO","La Rioja",383220,"Aislamiento y casos leves",1411,1444
+"35","CUYO","La Rioja",383220,"Casos graves",350,1444
+"36","CUYO","La Rioja",383220,"Casos graves Neo",113,1444
+"37","CUYO","Mendoza",1949293,"Aislamiento y casos leves",3466,6675
+"38","CUYO","Mendoza",1949293,"Casos graves",3440,6675
+"39","CUYO","Mendoza",1949293,"Casos graves Neo",292,6675
+"40","NEA","Misiones",1233177,"Aislamiento y casos leves",2891,2208
+"41","NEA","Misiones",1233177,"Casos graves",1059,2208
+"42","NEA","Misiones",1233177,"Casos graves Neo",209,2208
+"43","PATAGONIA","Neuquen",646784,"Aislamiento y casos leves",2005,2482
+"44","PATAGONIA","Neuquen",646784,"Casos graves",1013,2482
+"45","PATAGONIA","Neuquen",646784,"Casos graves Neo",121,2482
+"46","PATAGONIA","Río Negro",728403,"Aislamiento y casos leves",1835,2513
+"47","PATAGONIA","Río Negro",728403,"Casos graves",877,2513
+"48","PATAGONIA","Río Negro",728403,"Casos graves Neo",133,2513
+"49","NOA","Salta",1388532,"Aislamiento y casos leves",3584,3015
+"50","NOA","Salta",1388532,"Casos graves",771,3015
+"51","NOA","Salta",1388532,"Casos graves Neo",218,3015
+"52","CUYO","San Juan",764464,"Aislamiento y casos leves",1548,2174
+"53","CUYO","San Juan",764464,"Casos graves",1412,2174
+"54","CUYO","San Juan",764464,"Casos graves Neo",108,2174
+"55","CUYO","San Luis",495629,"Aislamiento y casos leves",1189,1324
+"56","CUYO","San Luis",495629,"Casos graves",151,1324
+"57","CUYO","San Luis",495629,"Casos graves Neo",81,1324
+"58","PATAGONIA","Santa Cruz",347593,"Aislamiento y casos leves",947,1005
+"59","PATAGONIA","Santa Cruz",347593,"Casos graves",189,1005
+"60","PATAGONIA","Santa Cruz",347593,"Casos graves Neo",51,1005
+"61","PAMPEANA","Santa Fe",3481514,"Aislamiento y casos leves",8268,15622
+"62","PAMPEANA","Santa Fe",3481514,"Casos graves",9837,15622
+"63","PAMPEANA","Santa Fe",3481514,"Casos graves Neo",455,15622
+"64","NOA","Santiago del Estero",958251,"Aislamiento y casos leves",2884,1708
+"65","NOA","Santiago del Estero",958251,"Casos graves",368,1708
+"66","NOA","Santiago del Estero",958251,"Casos graves Neo",154,1708
+"67","PATAGONIA","Tierra del Fuego",164944,"Aislamiento y casos leves",291,703
+"68","PATAGONIA","Tierra del Fuego",164944,"Casos graves",47,703
+"69","PATAGONIA","Tierra del Fuego",164944,"Casos graves Neo",22,703
+"70","NOA","Tucumán",1654388,"Aislamiento y casos leves",3879,5504
+"71","NOA","Tucumán",1654388,"Casos graves",2111,5504
+"72","NOA","Tucumán",1654388,"Casos graves Neo",331,5504
