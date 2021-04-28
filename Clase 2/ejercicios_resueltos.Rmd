@@ -1,0 +1,278 @@
+---
+title: "Ejercicios Tidyverse 2"
+author: "Laboratorio Políticas Públicas"
+date: "28/4/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data_final_clase <- read.csv("https://github.com/labpoliticasuba/Clases_2020/blob/master/Clase%2003/Ejercicio_clase/data_final_clase.csv", encoding = "Latin1")
+data_final_clase
+```
+
+# Practiquemos lo que vimos hoy!:
+
+## Generemos una tabla única que aglutine la información de "data_clase_final", "poblacion_edad" y "casos_muertos"!
+
+Para esto vamos a trabajar con los dataset presentes en el [siguiente link](https://github.com/labpoliticasuba/Clases_2020/tree/master/Clase%2003/Ejercicio_clase).
+
+1. Llamemos a Tidyverse!
+
+```{r, include=TRUE}
+#activemos tidyverse
+library(tidyverse)
+```
+
+2.a.  Carguemos nuestro dataset llamado *"data_clase_final.csv"* en una nueva variable llamada "data_clase_final" (acordate de modificar el encoding en Latin1)
+```{r}
+#carguemos nuestro dataset
+data_clase_final <- read.csv("https://raw.githubusercontent.com/labpoliticasuba/Clases_2020/master/Clase%2003/Ejercicio_clase/data_final_clase.csv", 
+                             encoding = "UTF-8")
+```
+
+2.b.  Demos un pantallazo a nuestro dataset usando la función tail():
+```{r}
+#demos un pantallazo a nuestro dataset con tail
+head(data_clase_final)
+```
+2.c.  Conozcamos cuáles son las columnas que lo integran:
+```{r}
+colnames(data_clase_final)
+```
+
+3.a Traigamos nuestro dataset *"poblacion_edad.csv"* y llamemoslo "poblacion_edad"
+
+```{r}
+poblacion_edad <- read.csv("https://raw.githubusercontent.com/labpoliticasuba/Clases_2020/master/Clase%2003/Ejercicio_clase/poblacion_edad.csv", 
+                           encoding = "Latin1")
+```
+
+3.b. Examinemos las columnas con un names():
+      - PROVINCIA: contiene los datos del distrito
+      - X0.19: Cantidad de hab. de 0 a 19 años
+      - X20.39: Cantidad de hab. de 20 a 39 años
+      - X40.59: Cantidad de hab. de 40 a 59 años
+      - X60.79: Cantidad de hab. de 60 a 79 años
+      - X80.99: Cantidad de hab. de 80 a 99 años
+
+```{r}
+names(poblacion_edad)
+```
+
+3. c. Utilicemos la función gather() para generar una columna llamada "grupo_etario" que aglutine a las diferentes columnas que tienen la cantidad de hab x provincia
+```{r}
+poblacion_edad <- gather(poblacion_edad, grupo_etario, value, X0.19:X80.99 )
+```
+
+3.d. Modifiquemos como estan redactadas la observaciones en la columna "grupo_etario" con la función case_when(). Deben ser reemplazadas así:
+      - X0.19: "De 0 a 19 años"
+      - X20.39: "De 20 a 39 años"
+      - X40.59: "De 40 a 59 años"
+      - X60.79: "De 60 a 79 años"
+      - X80.99: "De 80 a 99 años"
+```{r}
+poblacion_edad <- poblacion_edad %>% mutate( grupo_etario = case_when(
+               grupo_etario == "X0.19" ~ 'De 0 a 19 años',
+               grupo_etario == "X20.39" ~ 'De 20 a 39 años',
+               grupo_etario == "X40.59" ~ 'De 40 a 59 años',
+               grupo_etario == "X60.79" ~ 'De 60 a 79 años',
+               grupo_etario == "X80.99" ~ 'De 80 a 99 años'))
+```
+
+
+
+3.e. ¿Cómo podemos unir el dataset de "data_clase_final" con el de "poblacion_edad" ?
+
+3.e.i. ¿Cuál es nuestra primary key? Es decir, ¿cuál es nuestra columna que nos va a permitir unir ambas tablas ya que tienen los mismos valores?
+
+```{r}
+#DISTRITO es nuestra primary key
+```
+
+3.e.ii. Fijemosnos el nombre de las columnas, ¿son las mismas para ambos casos? Modifiquemsolas si es necesario.
+
+```{r}
+#nos fijamos los nombres de data_clase_final
+names(data_clase_final)
+```
+
+```{r}
+#nos fijamos los nombres de poblacion_edad
+names(poblacion_edad)
+```
+```{r}
+#ACA HAY DOS OPCIONES A LA HORA DE CAMBIARLO:
+
+#OPCION1:
+poblacion_edad <- poblacion_edad %>% 
+  rename(
+    DISTRITO = PROVINCIA)
+```
+
+```{r}
+#OPCION2:
+names(poblacion_edad)[1] <- "DISTRITO"
+```
+
+
+3.e.iii. Revisemos que tengan los mismos valores en ambas columnas -de ambos datasets- para que la unión se dé bien entre todas las observaciones. 
+```{r} 
+#revisamos data_clase_final
+unique(data_clase_final$DISTRITO)
+```
+```{r}
+#revisamos poblacion_edad
+unique(poblacion_edad$DISTRITO)
+```
+
+3.e.iv. Modificá los valores utilizando el siguiente fragmento:
+```{r}
+#cambiamos el tipo de objeto:
+data_clase_final$DISTRITO <- as.character(as.factor(data_clase_final$DISTRITO))
+#cambiamos el tipo de objeto:
+poblacion_edad$DISTRITO <- as.character(as.factor(poblacion_edad$DISTRITO)) 
+#le pedimos que cada vez que encuentre una observacion en la columna DISTRITO 
+#y que sea igual a "Ciudad A..." la reemplace por "CABA"
+poblacion_edad$DISTRITO[poblacion_edad$DISTRITO == "Ciudad Autónoma de Buenos Aires"] <- 'CABA' 
+poblacion_edad$DISTRITO[poblacion_edad$DISTRITO == "Entre Rios"] <- 'Entre Ríos'
+poblacion_edad$DISTRITO[poblacion_edad$DISTRITO == "Neuquen"] <- 'Neuquén'
+```
+
+4. Realicemos el JOIN entre "data_clase_final" y "poblacion_edad" en un nuevo dataset llamado "data_poblacion"
+```{r}
+data_poblacion <- left_join(data_clase_final, poblacion_edad)
+head(data_poblacion)
+```
+
+5. Ahora realice un right_join() entre "data_poblacion" y "caso_muertos.csv" utilizando lo aprendido! Genere un nuevo dataset llamado: "data_poblacion_casos" donde haya una columna para la cantidad de infectados y otra para la cantidad de fallecidos que se suma al dataset recien realizado de "data_poblacion"
+
+```{r}
+#traemos nuestro dataset de casos_muertos
+casos_muertos <- read.csv("D:/Guada/Clases/Lab_Pol_Publ/Tidyverse/vf2/casos_muertos.csv",
+                          encoding = "Latin1")
+head(casos_muertos,24)
+```
+
+```{r}
+#utilizamos el spread para dividir en dos columnas infectados y muertos
+casos_muertos <- spread(casos_muertos, Infectados_Muertos, Cantidad)
+head(casos_muertos)
+```
+
+
+```{r}
+#cambiamos el nombre de nuestra columna Provincia para hacer el join
+names(casos_muertos)[1] <- "DISTRITO"
+```
+
+```{r}
+#conocemos los valores únicos de nuestra clave primaria en data_poblacion
+unique(data_poblacion$DISTRITO)
+```
+
+```{r}
+#conocemos los valores únicos de nuestra clave primaria en casos_muertos
+unique(casos_muertos$DISTRITO)
+```
+```{r}
+#cambiamos el nombre de los distritos que no figuran igual
+casos_muertos$DISTRITO <- as.character(as.factor(casos_muertos$DISTRITO))
+casos_muertos$DISTRITO[casos_muertos$DISTRITO == "Ciudad Autónoma de Buenos Aires"] <- 'CABA'
+casos_muertos$DISTRITO[casos_muertos$DISTRITO == "Entre Rios"] <- 'Entre Ríos'
+casos_muertos$DISTRITO[casos_muertos$DISTRITO == "Neuquen"] <- 'Neuquén'
+casos_muertos$DISTRITO[casos_muertos$DISTRITO == "Provincia de Buenos Aires"] <- 'Buenos Aires'
+```
+
+```{r}
+#realizamos el right join
+data_poblacion_casos <- right_join(casos_muertos, data_poblacion)
+```
+```{r}
+#vemos las columnas que tenemos
+names(data_poblacion_casos)
+```
+
+
+6.a Ordenemos nuestras columnas de "data_poblacion_casos" y eliminemos la columna "X" 
+```{r}
+data_poblacion_casos <- data_poblacion_casos  %>% 
+  select("REGION", "DISTRITO", "POBLACION","grupo_etario",  "value", "TIPO_CAMA",
+         "CANTIDAD_CAMAS", "CANTIDAD_MEDICOS", "Infectados", "Muertos")
+```
+
+6.b. Reemplacemos las columnas para que queden todos en mayusculas (y cambiemos "value" por "CANT_HAB_X_GRUPO" )
+```{r}
+data_poblacion_casos <- data_poblacion_casos %>% 
+  rename(
+    GRUPO_ETARIO = grupo_etario,
+    CANT_HAB_X_GRUPO = value,
+    INFECTADOS = Infectados, 
+    MUERTOS = Muertos)
+head(data_poblacion_casos, 15)
+```
+
+7.a. Supongamos que en Argentina se va a contagiar con coronavirus el 10% de la población mayor de 60 años. En base al dataset generado anteriormente, ¿cuántas camas necesitaríamos para atenderlos si todos se enfermaran a la vez? Para responder la pregunta supongamos que el contagio respeta los patrones que se han observado en otras experiencias: el 5% de los contagiados son casos graves y el 15% de los contagiados son casos que necesitan aislamiento y cuidados paliativos. (atención: en la respuesta tiene que estar distinguida la cantidad de camas para casos graves y leves)
+
+```{r}
+#acomodamos nuestra data:
+data_7 <- spread(data_poblacion_casos, key = TIPO_CAMA, value = CANTIDAD_CAMAS)
+```
+
+```{r}
+#ccambiamos el nombre de las columnas:
+names(data_7)[9] <- "CANTIDAD_CAMAS_AISLAMIENTO_LEVES"
+names(data_7)[10] <- "CANTIDAD_CAMAS_GRAVES"
+names(data_7)[11] <- "CANTIDAD_GRAVES_NEO"
+```
+
+```{r}
+#Agrupo la poblacion mayor en una sola categoria "POBL_MAYOR" 
+data_7 <- data_7 %>% 
+
+    select(DISTRITO, GRUPO_ETARIO, CANT_HAB_X_GRUPO, CANTIDAD_CAMAS_AISLAMIENTO_LEVES, 
+            CANTIDAD_CAMAS_GRAVES) %>%
+  
+    filter((GRUPO_ETARIO == "De 60 a 79 años" | GRUPO_ETARIO == "De 80 a 99 años")) %>%
+  
+    mutate( GRUPO_ETARIO = case_when(
+          GRUPO_ETARIO == "De 60 a 79 años" ~ 'POBL_MAYOR', 
+          GRUPO_ETARIO == "De 80 a 99 años" ~ 'POBL_MAYOR'))
+head(data_7 )
+```
+
+```{r}
+#calculo la cantidad de camas necesitadas según leves y contagiados a NIVEL NACIONAL
+data_7a <- data_7 %>% summarise(TOTAL_POBL_MAYOR = sum(CANT_HAB_X_GRUPO, na.rm = T),
+                      CONTAGIADOS = ceiling(TOTAL_POBL_MAYOR*0.1), 
+                      NEC_CAMA_LEVE = ceiling(CONTAGIADOS*0.15),
+                      NEC_CAMA_GRAVE = ceiling(CONTAGIADOS*0.05))
+head(data_7a)
+```
+
+7b. ¿Cuantas camas faltan (o sobran) en cada distrito para atender a esta demanda?
+
+```{r}
+#calculo la cantidad de camas necesitadas, faltantes y sobrantes según leves y contagiados 
+# a NIVEL PROVINCIAL
+
+#la funcion ceiling nos redondea para arriba ya que no podemos tener 284180.9 contagiados, 
+# sino que tenemos 284181
+data_7b <- data_7 %>% group_by(DISTRITO) %>% 
+            mutate(TOTAL_POBL_MAYOR = sum(CANT_HAB_X_GRUPO, na.rm = T),
+                      CONTAGIADOS = ceiling(TOTAL_POBL_MAYOR*0.1), 
+                      NEC_CAMA_LEVE = ceiling(CONTAGIADOS*0.15),
+                      NEC_CAMA_GRAVE = ceiling(CONTAGIADOS*0.05),
+                      DIF_CAMAS_LEVE =  CANTIDAD_CAMAS_AISLAMIENTO_LEVES-NEC_CAMA_LEVE,
+                      DIF_CAMAS_GRAVE =  CANTIDAD_CAMAS_GRAVES-NEC_CAMA_GRAVE) %>%
+            select(DISTRITO, NEC_CAMA_LEVE, NEC_CAMA_GRAVE,
+                   DIF_CAMAS_LEVE, DIF_CAMAS_GRAVE) %>% distinct()
+data_7b #si da negativo faltan camas, si da positivo sobran camas
+```
+
+
