@@ -1,0 +1,137 @@
+
+Ejercicios práctica de análisis estadistico:
+
+### Saquemos algunas metricas de las elecciones en CABA para 2019!
+
+1. Cargamos las librerias necesarias:
+```{r}
+library(modeest)
+library(tidyverse)
+```
+
+2. Cargamos el dataset en csv correspondiente a [elecciones 2019](https://data.buenosaires.gob.ar/dataset/elecciones-2019):
+```{r}
+
+```
+
+3. Hagamos un *head()* para ver cómo esta compuesto nuestro dataset:
+```{r}
+
+```
+
+4. Usemos la función *unique()* para conocer los diferentes partidos -"partido_descripcion"- que disputaron la eleccion:
+```{r}
+
+```
+
+5. Hagamos un *summary()* para conocer un poco mejor a nuestras variables.
+```{r}
+
+```
+
+### MEDIDAS RESUMEN
+
+6. a. ¿Cuál es el promedio de votos obtenido por mesa para el Frente de Todos para cargos en la legislatura?
+```{r}
+
+
+```
+
+6.b. ¿Cuál seria el promedio tomando una media podada en 0.1? 
+(Recomendación, pueden usar el paramentro *trim* dentro de la función *mean()* para esto)
+```{r}
+
+
+```
+
+7. a. ¿Cuál es la mediana de votos obtenido para cada uno de los partidos que compitieron para formar parte de la Junta Comunal? 
+Ordena a los partidos de mayor a menor según su mediana.
+```{r}
+
+
+```
+
+8. Calculá la moda para saber cuál es la cantidad de votos más frecuente que obtuvo el "FRENTE IZQ Y DE TRAB-UNIDAD" por mesa para el cargo de Jefe y Vicejefe de Gobierno:
+```{r}
+
+
+```
+
+9. ¿Cuál fue la minima cantidad de votos que JxC obtuvo para "MIEMBROS DE LA JUNTA COMUNAL  "?
+```{r}
+
+```
+
+10. ¿Cuál es la comuna en donde hubo mayor cantidad de "VOTOS EN BLANCO" por mesa?
+
+```{r}
+
+
+```
+
+
+
+11. a. Calculemos el cuantil 0.87 para la totalidad de votos ("total_votos") obtenidos por la ALIANZA FRENTE DE TODOS con la funcion *quantile()*...
+```{r}
+
+```
+
+
+11. b. ¿Cómo se distribuye el voto de JxC en el Circuito nro 4? Calculá los cuantiles 1, 2, 3 y 0.93.. ¿Dirias que la curva sobresale a la derecha o ala izquierda?
+```{r}
+
+```
+
+Pareceria que se inclina más para la derecha -pero levemente-, hagamos un gráfico:
+```{r}
+elecciones_2019 %>%
+  filter(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4) %>%
+  ggplot(aes(x=total_votos)) + 
+  geom_density(fill="#f7cfb7", color="#e9ecef", alpha=0.8)  +
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.25, na.rm = T), color="red") + 
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.5, na.rm = T), color="red") +
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.75, na.rm = T), color="red" )
+```
+
+11.c. ¿Te animas a hacer un boxplot con cada uno de las comunas para "JxC"?
+```{r}
+
+```
+
+### Medidas de dispersión
+
+12.a. Calculemos la varianza del voto a la "ALIANZA JUNTOS POR EL CAMBIO" y la "ALIANZA FRENTE DE TODOS" según el cargo que este en disputa:
+```{r}
+
+
+```
+
+12.b. ¿Qué significan esos resultados ?
+
+13. Ahora calculemos el desvio estandar para los mismos partidos del punto anterior:
+```{r}
+
+```
+
+### Covarianza y Correlación
+
+14.a. Incorporemos el dataset de circuitos electorales que trae ademas información de la poblacion que vive en los mismos:
+```{r}
+
+```
+
+14.b. Realicemos un join entre "circuitos" y nuestro dataset de "elecciones_2019"
+```{r}
+
+```
+
+14.c. Observemos las variables generadas con *tail()*:
+```{r}
+
+```
+
+15.a. ¿Hay alguna relación entre la cantidad de hogares con NBI ("HOGARES_NBI") y los votos emitidos ("total_votos")?:
+```{r}
+
+```
+

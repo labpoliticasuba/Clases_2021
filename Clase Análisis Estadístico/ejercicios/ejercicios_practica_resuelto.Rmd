@@ -1,0 +1,188 @@
+
+Ejercicios práctica de análisis estadistico:
+
+### Saquemos algunas metricas de las elecciones en CABA para 2019!
+
+1. Cargamos las librerias necesarias:
+```{r}
+#install.packages("modeest")
+library(modeest)
+library(tidyverse)
+```
+
+2. Cargamos el dataset en csv correspondiente a [elecciones 2019](https://data.buenosaires.gob.ar/dataset/elecciones-2019):
+```{r}
+elecciones_2019 <- read.csv("http://cdn.buenosaires.gob.ar/datosabiertos/datasets/elecciones-2019/resultados-definitivos-elecciones-generales-2019.csv")
+```
+
+3. Hagamos un *head()* para ver cómo esta compuesto nuestro dataset:
+```{r}
+head(elecciones_2019)
+```
+
+4. Usemos la función *unique()* para conocer los diferentes partidos -"partido_descripcion"- que disputaron la eleccion:
+```{r}
+unique(elecciones_2019$partido_descripcion)
+```
+
+5. Hagamos un *summary()* para conocer un poco mejor a nuestras variables.
+```{r}
+summary(elecciones_2019)
+```
+### MEDIDAS RESUMEN
+
+6. a. ¿Cuál es el promedio de votos obtenido por mesa para el Frente de Todos para cargos en la legislatura?
+```{r}
+unique(elecciones_2019$cargo_descripcion)
+elecciones_2019 %>%
+  filter(partido_descripcion == "ALIANZA FRENTE DE TODOS", cargo_descripcion =="DIP.LEGIS.CABA                ") %>%
+  summarise(promedio = mean(total_votos))
+```
+6.b. ¿Cuál seria el promedio tomando una media podada en 0.1? 
+(Recomendación, pueden usar el paramentro *trim* dentro de la función *mean()* para esto)
+```{r}
+elecciones_2019 %>%
+  filter(partido_descripcion == "ALIANZA FRENTE DE TODOS", cargo_descripcion =="DIP.LEGIS.CABA                ") %>%
+  summarise(media_podada = mean(total_votos, trim = 0.1))
+```
+7. a. ¿Cuál es la mediana de votos obtenido para cada uno de los partidos que compitieron para formar parte de la Junta Comunal? 
+Ordena a los partidos de mayor a menor según su mediana.
+
+```{r}
+unique(elecciones_2019$cargo_descripcion)
+elecciones_2019 %>%
+  filter( cargo_descripcion =="MIEMBROS DE LA JUNTA COMUNAL  ") %>%
+  group_by(partido_descripcion) %>%
+  summarise(mediana = median(total_votos)) %>%
+  arrange(desc(mediana))
+```
+
+8. Calculá la moda para saber cuál es la cantidad de votos más frecuente que obtuvo el "FRENTE IZQ Y DE TRAB-UNIDAD" por mesa para el cargo de Jefe y Vicejefe de Gobierno
+```{r}
+unique(elecciones_2019$partido_descripcion)
+elecciones_2019 %>%
+  filter( cargo_descripcion =="JEFE y VICE DE GOBIERNO       " & partido_descripcion == "FRENTE IZQ Y DE TRAB-UNIDAD") %>%
+  summarise(moda = mfv(total_votos))
+```
+9. ¿Cuál fue la minima cantidad de votos que JxC obtuvo para "MIEMBROS DE LA JUNTA COMUNAL  "?
+```{r}
+elecciones_2019 %>%
+  filter(cargo_descripcion =="MIEMBROS DE LA JUNTA COMUNAL  " & partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO") %>%
+  summarise(minimo = min(total_votos))
+```
+
+10. ¿Cuál es la comuna en donde hubo mayor cantidad de "VOTOS EN BLANCO" por mesa?
+
+```{r}
+unique(elecciones_2019$partido_descripcion)
+elecciones_2019 %>%
+  filter( partido_descripcion == "VOTOS EN BLANCO") %>%
+  group_by(comuna) %>%
+  summarise(max_votos_por_mesa = max(sum(total_votos)/n())) %>%
+  arrange(desc(max_votos_por_mesa)) %>%
+  head(1)
+```
+11. a. Calculemos el cuantil 0.87 para la totalidad de votos ("total_votos") obtenidos por la ALIANZA FRENTE DE TODOS con la funcion *quantile()*...
+
+```{r}
+#opcion a:
+quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA FRENTE DE TODOS"), "total_votos"], probs = c(0.25, 0.5, 0.75, 0.85), na.rm = T)
+```
+
+```{r}
+#opcion b
+elecciones_2019 %>% 
+  filter(partido_descripcion == "ALIANZA FRENTE DE TODOS") %>%
+  summarise(cuantil_85 = quantile(total_votos, probs = 0.85))
+```
+
+11. b. ¿Cómo se distribuye el voto de JxC en el Circuito nro 4? Calculá los cuantiles 1, 2, 3 y 0.93.. ¿Dirias que la curva sobresale a la derecha o ala izquierda?
+```{r}
+ej_11b <- elecciones_2019 %>% 
+filter(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4) %>%
+summarise(cuantil_25 = quantile(total_votos, probs = 0.25),
+          cuantil_50 = quantile(total_votos, probs = 0.50),
+          cuantil_75 = quantile(total_votos, probs = 0.75),
+           cuantil_93 = quantile(total_votos, probs = 0.93))
+```
+
+Pareceria que se inclina más para la derecha -pero levemente-, hagamos un gráfico:
+```{r}
+elecciones_2019 %>%
+  filter(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4) %>%
+  ggplot(aes(x=total_votos)) + 
+  geom_density(fill="#f7cfb7", color="#e9ecef", alpha=0.8)  +
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.25, na.rm = T), color="red") + 
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.5, na.rm = T), color="red") +
+  geom_vline(xintercept= quantile(elecciones_2019[(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" & elecciones_2019$circuito_codigo == 4),"total_votos"], probs = 0.75, na.rm = T), color="red" )
+```
+
+11.c. ¿Te animas a hacer un boxplot con cada uno de las comunas para "JxC"?
+```{r}
+elecciones_2019$comuna <- gsub(pattern = "[COMUNA ]", replacement = "", elecciones_2019$comuna)
+elecciones_2019$comuna <- as.numeric(elecciones_2019$comuna)
+
+elecciones_2019 %>% 
+  filter(elecciones_2019$partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO") %>%
+  group_by(comuna) %>%
+  ggplot(aes(x = comuna, y = total_votos, fill = comuna)) +
+  geom_boxplot() +
+  theme(legend.position = "none")
+```
+
+### Medidas de dispersión
+
+12.a. Calculemos la varianza del voto a la "ALIANZA JUNTOS POR EL CAMBIO" y la "ALIANZA FRENTE DE TODOS" según el cargo que este en disputa:
+
+```{r}
+elecciones_2019 %>%
+  filter(partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" | partido_descripcion == "ALIANZA FRENTE DE TODOS" ) %>%
+  group_by(cargo_descripcion, partido_descripcion) %>%
+  summarise(varianza = var(total_votos)) %>%
+  arrange(partido_descripcion)
+```
+
+12.b. ¿Qué significan esos resultados ?
+
+13. Ahora calculemos el desvio estandar para los mismos partidos del punto anterior:
+```{r}
+elecciones_2019 %>%
+  filter(partido_descripcion == "ALIANZA JUNTOS POR EL CAMBIO" | partido_descripcion == "ALIANZA FRENTE DE TODOS" ) %>%
+  group_by(cargo_descripcion, partido_descripcion) %>%
+  summarise(desvio_estandar = sd(total_votos)) %>%
+  arrange(partido_descripcion)
+```
+
+### Covarianza y Correlación
+
+14.a. Incorporemos el dataset de circuitos electorales que trae ademas información de la poblacion que vive en los mismos:
+```{r}
+circuitos <- read.csv("BASE_CIRCUITOS.csv")
+```
+
+14.b. Realicemos un join entre "circuitos" y nuestro dataset de "elecciones_2019"
+
+```{r}
+elecciones_2019$circuito_codigo <- as.character(elecciones_2019$circuito_codigo)
+
+names(circuitos)[1] <- "circuito_codigo"
+circuitos$circuito_codigo <- as.character(circuitos$circuito_codigo)
+
+union_elecciones_circuitos <- elecciones_2019 %>% left_join( circuitos, by= "circuito_codigo")
+```
+
+14.c. Observemos las variables generadas con *tail()*:
+```{r}
+tail(union_elecciones_circuitos)
+```
+
+15.a. ¿Hay alguna relación entre la cantidad de hogares con NBI ("HOGARES_NBI") y los votos emitidos ("total_votos")?:
+```{r}
+union_elecciones_circuitos <- union_elecciones_circuitos %>% 
+  drop_na()
+
+cor(x = union_elecciones_circuitos$HOGARES_NBI, y = union_elecciones_circuitos$total_votos)
+```
+
+
+
