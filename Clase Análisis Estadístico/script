@@ -3,6 +3,7 @@ library(tidyverse)
 library(hrbrthemes)
 library(viridis)
 
+## Para más conocimiento de la metodologia de eph: https://www.indec.gob.ar/ftp/cuadros/menusuperior/eph/EPH_registro_t218.pdf
 
 ## Descargamos la base de eph
 base_eph <- get_microdata(year = 2019,   # especifco el año
