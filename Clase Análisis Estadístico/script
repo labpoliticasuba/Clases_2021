@@ -1,0 +1,174 @@
+library(eph)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+
+
+## Descargamos la base de eph
+base_eph <- get_microdata(year = 2019,   # especifco el año
+                          trimester = 4,     # el trimestre
+                          vars = c('all')) # le pido todas las variables
+
+#seleccionamos y nos quedamos con las columnas que nos sirven de la región de GBA y para encuestados mayores de 18
+base_eph <- base_eph %>% select(CODUSU, AGLOMERADO, ANO4, TRIMESTRE, NRO_HOGAR, REGION, PONDERA, 
+                                CH04, CH06, CH09, NIVEL_ED, P21, P47T, ITF, IPCF) %>% 
+  filter(REGION == 1 & CH06 >= 18)
+
+# renombramos las columnas para que nos queden más entendibles
+base_eph <- base_eph %>% rename(
+  cod_distintivo_viviendas = CODUSU, 
+  ano = ANO4,
+  trimestre = TRIMESTRE, 
+  nro_hogar = NRO_HOGAR,
+  region = REGION, 
+  pondera = PONDERA,
+  sexo = CH04,
+  edad = CH06, 
+  sabe_leer_escribir = CH09,
+  nivel_educ = NIVEL_ED,
+  monto_ingreso_ocupacion_princ = P21,
+  monto_total_individual = P47T,
+  ingreso_total_familiar = ITF,
+  ingreso_per_capita_familiar = IPCF
+)
+
+#Reemplazamos algunos valores para que sean más legibles:
+base_eph$sexo[base_eph$sexo == 1] <- "varon"
+base_eph$sexo[base_eph$sexo == 2] <- "mujer"
+
+base_eph$sabe_leer_escribir[base_eph$sabe_leer_escribir == 1] <- "Si"
+base_eph$sabe_leer_escribir[base_eph$sabe_leer_escribir == 2] <- "No"
+base_eph$sabe_leer_escribir[base_eph$sabe_leer_escribir == 3] <- "Menor de 2 años"
+
+base_eph$nivel_educ[base_eph$nivel_educ == 1] <- "Primario incompleto"
+base_eph$nivel_educ[base_eph$nivel_educ == 2] <- "Primario completo"
+base_eph$nivel_educ[base_eph$nivel_educ == 3] <- "Secundario incompleto"
+base_eph$nivel_educ[base_eph$nivel_educ == 4] <- "Secundario completo"
+base_eph$nivel_educ[base_eph$nivel_educ == 5] <- "Superior universitario incompleto"
+base_eph$nivel_educ[base_eph$nivel_educ == 6] <- "Superior universitario completo"
+base_eph$nivel_educ[base_eph$nivel_educ == 7] <- "Sin instrucción"
+base_eph$nivel_educ[base_eph$nivel_educ == 9] <- "Ns/ Nr"
+
+
+
+##########################################################################################################
+########################## ANALISIS ESTADISTICO ##########################################################
+##########################################################################################################
+
+# MEDIA 
+
+#Podemos calcular la media con la funcion mean: 
+
+mean(base_eph$monto_total_individual)
+
+#Calcular la misma media sin valores nulos.
+
+mean(base_eph$monto_total_individual,na.rm=T)
+
+#Podemos podarla al 10% y ver el resultado evitando los valores extremos
+mean(base_eph$monto_total_individual, na.rm=T,trim=0.1)
+
+# MEDIANA
+#Podemos calcular la mediana con la funcion mean: 
+
+median(base_eph$monto_total_individual, na.rm = T)
+
+
+## MODA
+#install.packages("modeest")
+library(modeest)
+
+mfv(base_eph$monto_total_individual, na_rm = T) 
+
+### Hagamos un grafico
+base_eph %>% filter(monto_total_individual <= 100000) %>%
+  ggplot( aes(x=monto_total_individual)) + 
+  geom_density(fill="#f7cfb7", color="#e9ecef", alpha=0.8)  +
+  geom_vline(xintercept=mean(base_eph$monto_total_individual, na.rm = T), color="red") + 
+  geom_vline(xintercept=median(base_eph$monto_total_individual, na.rm = T), color="blue") +
+  geom_vline(xintercept=mfv(base_eph$monto_total_individual, na.rm = T), color="green" )
+
+
+
+### Podemos calcular el monto maximo y minimo percibido por individuo
+max(base_eph$monto_total_individual, na.rm = T)
+min(base_eph$monto_total_individual, na.rm = T)
+
+
+#### ¿Cuál es la varianzaa de ingreso total por familia??
+var(base_eph$ingreso_total_familiar, na.rm = T) 
+
+#¿Cuál es el desvio estandar del ingreso total por familia?
+
+sd(base_eph$ingreso_total_familiar, na.rm = T) 
+
+## Cuál es el 1er cuartil, mediana y 3er cuartil de wt?
+
+quantile(base_eph$ingreso_total_familiar,probs=c(0.25,0.5,0.75), na.rm = T)
+
+### ¿Cuál es el rango intercuartil?
+IQR(base_eph$ingreso_total_familiar)
+
+
+########### ¡HAGAMOS UN BOXPLOT!:
+base_eph %>%
+  ggplot( aes(y=ingreso_per_capita_familiar, x = "", fill = nivel_educ)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  theme_ipsum() +
+  theme(
+    legend.position="bottom",
+    plot.title = element_text(size=11)) +
+  ggtitle("Boxplot sobre Ingreso Familiar (per cápita) según nivel educativo") +
+  xlab("") +
+  ylab("Ingreso Familiar(per cápita)")
+
+### tenemos muchos outliers. ¿Cómo los eliminamos?
+
+base_eph$ingreso_per_capita_familiar <- ifelse(base_eph$ingreso_per_capita_familiar>quantile(base_eph$ingreso_per_capita_familiar, 0.95),
+                                    quantile(base_eph$ingreso_per_capita_familiar, 0.95),base_eph$ingreso_per_capita_familiar)
+
+
+# Repitamos el boxplot sin outliers: 
+base_eph %>%
+  ggplot( aes(y=ingreso_per_capita_familiar, x = "", fill = nivel_educ)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  theme_ipsum() +
+  theme(
+    legend.position="bottom",
+    plot.title = element_text(size=11)) +
+  ggtitle("Boxplot sobre Ingreso Familiar (per cápita) según nivel educativo") +
+  xlab("") +
+  ylab("Ingreso Familiar(per cápita)")
+
+
+
+## CALCULEMOS UNA CORRELACION ENTRE DOS VARIABLES:
+
+# para poder calcularlo, necesitamos deshacernos de los NA:
+base_eph <- base_eph[which(!is.na(base_eph$edad)),]
+base_eph <- base_eph[which(!is.na(base_eph$monto_total_individual)),]
+
+
+cor(base_eph[, c("edad", "monto_total_individual"), ])
+
+### GRAFIQUEMOSLO:
+
+pairs(x = base_eph[, c("edad", "monto_total_individual")],
+      main = "¿Cuál es la relación entre la edad y el monto total individual?")
+
+
+### ¿Qué pasa si queremos hacer un gráfico que agrupe según sexo?
+group <- NA
+group[base_eph$sexo <- 1] <- 1
+group[base_eph$sexo <- 2] <- 2
+
+pairs(x = base_eph[, c("edad", "monto_total_individual")],
+      col = c("red", "purple", "green")[group],
+      main = "¿Cuál es la relación entre la edad y el monto total individual según el género?", labels = c("edad", "monto total individual"))
+
+
+## ¿Qué pasa si queremos comparar el porcentaje con respecto a otra variable?
+
+prop.table(table(base_eph$sexo,base_eph$nivel_educ),1)
