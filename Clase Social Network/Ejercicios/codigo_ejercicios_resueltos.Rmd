@@ -1,6 +1,6 @@
 ---
 title: "Social Network Ejercicios - resuelto"
-author: "Eant"
+author: "Laboratorio de políticas públicas"
 date: "11/9/2020"
 output: html_document
 ---
