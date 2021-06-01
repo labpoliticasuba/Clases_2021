@@ -1,0 +1,274 @@
+---
+title: "Social Network - sin resolver"
+author: "Guada gonzalez (guadag12@outlook.com)"
+date: "11/9/2020"
+output: html_document
+---
+
+Librerias:
+```{r}
+library(tidyverse)
+library(igraph)
+library(ggplot2)
+library(gtable)
+library(plotly)
+library(rtweet)
+library(threejs)
+library(visNetwork)
+library(htmlwidgets)
+```
+
+#1. Subamos la info necesaria para trabajar:
+
+```{r}
+tweets <- read_csv("tweets.csv")
+data_usuarios <- read_csv("data_usuarios.csv")
+
+tweets <- data.frame(lapply(tweets, as.character), stringsAsFactors=FALSE)
+```
+
+
+```{r}
+View(tweets)
+```
+
+#2. Preparamos la data para armar el grafico
+
+2.a. Los nodos / vertices / actores
+```{r}
+nodos <- gather(data = tweets, key = "tipo", value = "identificacion", c(1,2))
+nodos$retweet_count <- as.numeric(nodos$retweet_count)
+
+which.duplicates<-rownames(nodos[duplicated(nodos$identificacion),])
+nodos <- nodos[-c(as.integer(which.duplicates)),]
+
+nodos <- nodos %>% select(identificacion, tipo, retweet_count)  %>% rename( name = identificacion)
+```
+
+2.b. Los edges / links / relaciones
+
+```{r}
+links <- tweets %>% group_by(screen_name, retweet_screen_name) %>% 
+  filter(screen_name %in% nodos$name & retweet_screen_name %in% nodos$name) %>%
+  rename(from = screen_name,
+         to = retweet_screen_name,
+         friendship = retweet_count)
+```
+
+# 3. Grafiquemos!:
+
+```{r}
+g <- graph_from_data_frame(___________, directed=TRUE, vertices=___________)
+class(___________) #chequeamos que esta bien el tipo de grafico
+```
+
+3.a. Conozcamos un poco más de info sobre nuestro grafico con print()
+```{r}
+print(___________, e=TRUE, v=TRUE)
+```
+
+3.b. Plotiemos el gráfico con la función *plot()*!
+```{r}
+___________(g)
+```
+
+3.d. Veamos info sobre los nodos con *V()*:
+```{r}
+___________(g)
+```
+
+3.e. Veamos info sobre las relaciones entre usuarios con *E()*:
+```{r}
+___________(g)
+```
+
+3.f. Conozcamos el tamaño de nuestra red
+```{r}
+gsize(g)
+```
+
+3.g. Veamos info adicional
+```{r}
+vertex_attr(g)
+edge_attr(g)
+```
+
+3.h. ¿Es un gráfico directo o indirecto?
+```{r}
+is.directed(g)
+```
+3.i. Conozcaamos más info!
+```{r}
+summary(g)
+```
+
+#4. COLORES / Customizacion: 
+
+4.a. Cambiamos el color de los nodos con el parametro "vertex.color" y le pedimos que no nos traiga el nombre de los vertices con "vertex.label = NA":
+```{r}
+plot(g, vertex.label = NA, vertex.color = "___________")
+```
+
+4.b.cambiamos el color de los nodos según la columna "colors":
+```{r}
+nodos <- nodos %>% left_join(data_usuarios, by = "name")
+
+g <- ___________(links, directed=TRUE, vertices=nodos)
+
+plot(___________, vertex.label = NA)
+```
+
+4.c. Cambiar el color de los usuarios y de las flechas con "vertex.label.color" y "edge.color":
+```{r}
+plot(g, vertex.label.color = "___________", edge.color = "green")
+```
+
+#5. Degree
+
+5.a. Calculemos el "out-degree" con la funcion "degree()"
+```{r}
+g.outd <- ___________(g, mode = c("___________"))
+
+# View a summary of out-degree
+table(g.outd)
+
+# Make a histogram of out-degrees
+hist(g.outd, breaks = 30)
+```
+
+5.b. Calculemos el "in-degree" y cambiemos la cantidad de nombres que aparecen segun el grado de entrada
+```{r}
+g.ind <- degree(g, mode = c("___________"))
+my.label<- names(g.ind)
+my.label[which(log(g.ind+1) < ___________)]<- "" 
+my.label2<- my.label
+
+plot(g,  vertex.label = ___________, vertex.label.cex = 1.3)
+```
+
+#7. LAYOUTS
+7.a. Realicemos un gráfico usando el algoritmo "Fruchterman Reigold" (layout.fruchterman.reingold):
+
+```{r}
+l <- ___________(g, grid = c("nogrid"))
+
+plot(g, vertex.label = my.label2,  vertex.size = 5, layout = l)
+```
+
+#8. MAS INFO SOBRE LOS USUARIOS:
+
+8.a. Saber como estan conectados dos usuarios entre si:
+```{r}
+g['___________', '___________']
+g[ '___________', '___________']
+```
+
+#DEGREE
+
+#9. DEGREE
+
+9.a. Calculemos el "out-degree":
+```{r}
+# Calcular el outdegree de cada vertice
+g.outd <- degree(g, mode = c("______"))
+
+# Ver la distribucion de cada uno
+table(g.outd)
+
+# Hacer un histograma
+hist(g.outd, breaks = 10)
+```
+
+#10. Densidad
+10. Calculemos la densidad con la función *edge_density()*:
+```{r}
+#obtener la densidad del grafico
+gd <- edge_density(g)
+gd
+
+```
+
+## COMUNIDADES
+
+#Walktrap community
+11. Realizar un grafico de comunidades con "walktrap.community()":
+```{r}
+l <- layout.fruchterman.reingold(g, grid = c("nogrid"))
+
+wc <- ___________(g)
+
+# Determine sizes of each community
+sizes(wc)
+
+# Determine which individuals belong to which community
+users_wc <- membership(___________)
+
+new.color<-data.frame(t(col2rgb(wc$membership)/255))
+new.color<-rgb(new.color, alpha=.6)
+
+plot(wc, g, vertex.label = NA,  vertex.size=log(g.ind+1), vertex.color=new.color, edge.size = 0.5, edge.color = "grey",  layout = l)
+```
+
+12. Generemos otro tipo de gráfico: 
+```{r}
+plot(g, vertex.label=my.label2, layout=l, vertex.size=log(g.ind+1), vertex.label.color="Black",
+            vertex.color=new.color, vertex.frame.color=new.color, edge.width= .01, edge.arrow.size=.2, 
+            vertex.label.cex=.2,  
+            edge.curved=TRUE, vertex.label.dist=rnorm(length(g.ind),.9,.03))
+```
+
+#EXPORTAR
+13. Exportar con *jpeg()*, *plot.igraph()* y *dev.off()*:
+
+```{r}
+___________(file = "Network.jpg", width = 4000, height = 4000, units = "px", pointsize = 75, quality = 95, 
+     bg = "white", res = NA, family = "", restoreConsole = TRUE, type = c("windows", "cairo"))
+
+___________(g, vertex.label=my.label2, layout=l, vertex.size=log(g.ind+1)/3.5, vertex.label.color="Black",
+            vertex.color=new.color, vertex.frame.color=new.color, edge.width= .01, edge.arrow.size=.2, vertex.label.cex=.2,  
+            edge.curved=TRUE, vertex.label.dist=rnorm(length(g.ind),.9,.03))
+
+___________()
+```
+
+
+## Visnetwork
+14. Hagamos un grafico interactivo con *VisNetwork*:
+```{r}
+library(visNetwork)
+head(nodos)
+nodos$screen_name <- nodos$name
+nodes <- nodos %>% rename(id = name, label = screen_name)
+
+ visNetwork(___________, ___________, main = paste0("Interaccion en Twitter")) %>%
+      visIgraphLayout() %>%
+      ___________(
+        shape = "dot",
+        shadow = list(enabled = TRUE, size = 10)
+      ) %>%
+     ___________(
+        shadow = FALSE,
+        color = list(color = "#C4C4C4", highlight = "#C4C4C4"), length = 1000
+      ) %>%
+      visOptions(highlightNearest = list(enabled = T, degree = 1,
+                                         hover = T)) %>%
+      ___________(enabled = F, solver = "repulsion", repulsion = list(nodeDistance = 1000)) %>%
+      visInteraction(navigationButtons = TRUE)
+```
+
+## threejs
+15. Hagamos una ultima nube con la funcion *graphjs*:
+
+```{r}
+library(threejs)
+library(htmlwidgets)
+gjs.an <- graphjs(g, bg="gray10", showLabels=F, stroke=F, 
+                   layout_with_fr(g,  dim=3),
+                  vertex.color=new.color,
+                  main="Network interactiva sobre dolar" )
+gjs.an
+saveWidget(gjs.an, file="Dolar-Network-gjs-an.html")
+browseURL("Media-Network-gjs-an.html")
+
+```
+
