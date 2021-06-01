@@ -1,0 +1,224 @@
+---
+title: "codigo_ejercicios_sin_resolver"
+author: "guada"
+date: "22/9/2020"
+output: html_document
+---
+
+### Aeropuertos conectados en América del Sur
+
+Vamos a hacer un gráfico que muestre cómo estan conectados los aeropuertos entre sí y qué rutas son más frecuentes, dando lugar a la relevancia de cada aeropuerto. Entre más rutas lleven al mismo, más relevante va a ser.
+
+1. Cargamos las librerías:
+```{r}
+#install.packages(c("igraph", "gtable", "plotly", "threejs", "visNetwork", "htmlwidgets"))
+
+library(tidyverse)
+library(igraph)
+library(ggplot2)
+library(gtable)
+library(plotly)
+library(rtweet)
+library(threejs)
+library(visNetwork)
+library(htmlwidgets)
+```
+
+2.a. Cargamos el dataset de [aeropuertos](https://github.com/jpatokal/openflights/tree/master/data) llamado "airports.dat":
+```{r}
+
+```
+
+2.c. Modifiquemos el nombre de las columnas:
+```{r}
+data <- data %>% rename(
+  order = V1, 
+    airport_name = V2, 
+    airport_short_name = V3,
+    country = V4, 
+    iata = V5,
+    icao = V6, 
+    lat = V7, 
+    long = V8,
+    altitude = V9,
+    time_zone = V10, 
+    dst = V11, 
+    tz = V12, 
+    type = V13, 
+    source = V14
+)
+```
+
+2.d. Eliminemos los aeropuertos duplicados:
+```{r}
+
+```
+
+
+3.a. Modifiquemos nuestra base de datos para que sea la de nodos: 
+* Renombremos las columnas: id = iata, label = airport_name
+* Quedemosnos únicamente con las columnas de: id, label, country
+* Filtremos por aquellos aeropuertos que corresponden a paises sudamericanos.
+```{r}
+
+```
+
+4.a. Carguemos nuestro [dataset de rutas]("https://github.com/jpatokal/openflights/raw/master/data/routes.dat) que van a dar lugares a las edges.
+
+```{r}
+
+```
+
+4.b. Modifiquemos el nombre de las columnas:
+
+```{r}
+fl <- fl %>% rename(
+  airline = V1, 
+  airline_id = V2, 
+  source_airport = V3,
+  source_airport_id = V4, 
+  destination_airport = V5,
+  destination_airport_id = V6, 
+  codeshare = V7, 
+  stops = V8,
+  equipment = V9
+)
+```
+
+5.a. Generemos el dataset de "links", donde la conexion este dada por el aeropuerto inicial ("source_airport") y  el aeropuerto de destino ("destination_airport"):
+
+(!Aclaracion: recordá cambiar el nombre de la columna para que queden como "from", "to". Y recordá sumar una columna adicional que contemple la cantidad de veces que hay una conexión entre dos aeropuertos:
+```{r}
+
+```
+
+5.b. Filtra de manera tal las rutas que únicamente queden las correspondientes a Ámerica del Sur.
+
+(!Recomendacion: sabias que se puede filtrar no sólo con *==*, *>=*, sino ademas con *%in%*?)
+```{r}
+
+```
+
+6.a. Generá un objeto tipo "igraph" con los dataset de links y de nodos. 
+b. Preguntale a R si estamos frente a un tipo de objeto "igraph" 
+```{r}
+
+```
+
+7. Realicemos un gráfico de nuestra red con *plot()* eliminando el nombre del aeropuerto de la nube:
+```{r}
+
+```
+
+
+8. Conozcamos algunos aspectos de nuestro grafo:
+
+a. Tamaño de nuestra nube en cantidad de nodos:
+```{r}
+
+```
+
+b. ¿Es directo o indirecto?
+```{r}
+
+```
+
+d. ¿Cuál es el diametro de la red? ¿Que significa este número?
+```{r}
+
+
+```
+
+
+i. Realicemos un gráfico que muestre la sigla de cada aeropuerto como label y agreguemos parámetros esteticos para que quede más lindo:
+```{r}
+
+
+```
+
+9. Realiza un gráfico para cada tipo de layout visto:
+
+9.a. Generemos un circulo con "layout_in_circle()":
+```{r}
+
+
+```
+
+9.b. Generemos una estructura jerarquica con "layout_as_tree()":
+```{r}
+
+```
+
+9.c. Dejamos que R decida el mejor gráfico posible con "layout_nicely()":
+```{r}
+
+```
+
+9.d Realicemos un gráfico usando el algoritmo "Fruchterman Reigold" (layout.fruchterman.reingold):
+```{r}
+
+```
+
+9.e. Generemos una nube random con la función "layout.kamada.kawai":
+```{r}
+
+
+```
+
+9.f. Generemos una nube random con la función "layout_randomly()":
+```{r}
+
+
+```
+9.f. ¿Cuál crees es el mejor layout para el tipo de analisis que permite este grafo?
+
+
+11. COMUNIDADES
+11.a. Mapiemos las diferentes comunidades usando *edge.betweenness.community()* y establezcamos un color a partir del mismo
+```{r}
+wc <- walktrap.community(graph)
+
+V(graph)$color <- membership(wc)
+# Determinamos que usuario pertenece a qué comunidad
+new.color<-data.frame(t(col2rgb(wc$membership)/255))
+new.color<-rgb(new.color, alpha=.6)
+
+plot(wc, graph, vertex.label = NA, vertex.color=new.color, vertex.size=sqrt(graph.ind)*2, edge.size = 0.5, edge.color = "grey")
+```
+
+11.c. Exportemos el archivo generado anteriormente en *jpeg()*:
+```{r}
+
+
+
+
+
+```
+## MAPAS INTERACTIVOS
+
+12. Generemos una nube en *plotly* con el layout "kamada kawai" donde el color este dado por el país al que pertence el aeropuerto:
+
+```{r}
+
+
+
+
+```
+13.a. Hagamos un grafico interactivo con *VisNetwork*:
+```{r}
+
+
+```
+
+
+## threejs
+14. Hagamos una ultima nube con la funcion *graphjs*:
+
+```{r}
+
+
+
+
+
+
+```

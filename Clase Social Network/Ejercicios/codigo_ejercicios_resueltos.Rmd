@@ -1,0 +1,298 @@
+---
+title: "Social Network Ejercicios - resuelto"
+author: "Eant"
+date: "11/9/2020"
+output: html_document
+---
+
+### Aeropuertos conectados en América del Sur
+
+Vamos a hacer un gráfico que muestre cómo estan conectados los aeropuertos entre sí y qué rutas son más frecuentes, dando lugar a la relevancia de cada aeropuerto. Entre más rutas lleven al mismo, más relevante va a ser.
+
+1. Cargamos las librerías:
+```{r}
+#install.packages(c("igraph", "gtable", "plotly", "threejs", "visNetwork", "htmlwidgets"))
+
+library(tidyverse)
+library(igraph)
+library(ggplot2)
+library(gtable)
+library(plotly)
+library(rtweet)
+library(threejs)
+library(visNetwork)
+library(htmlwidgets)
+```
+
+2.a. Cargamos el dataset de [aeropuertos](https://github.com/jpatokal/openflights/tree/master/data) llamado "airports.dat":
+```{r}
+aeropuertos = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+data <- read.delim(aeropuertos, header = F, sep=",")
+```
+
+2.c. Modifiquemos el nombre de las columnas:
+```{r}
+data <- data %>% rename(
+  order = V1, 
+    airport_name = V2, 
+    airport_short_name = V3,
+    country = V4, 
+    iata = V5,
+    icao = V6, 
+    lat = V7, 
+    long = V8,
+    altitude = V9,
+    time_zone = V10, 
+    dst = V11, 
+    tz = V12, 
+    type = V13, 
+    source = V14
+)
+```
+
+2.d. Eliminemos los aeropuertos duplicados:
+```{r}
+which.duplicates<-rownames(data[duplicated(data$iata),])
+data <- data[-c(as.integer(which.duplicates)),]
+```
+
+
+3.a. Modifiquemos nuestra base de datos para que sea la de nodos: 
+* Renombremos las columnas: id = iata, label = airport_name
+* Quedemosnos únicamente con las columnas de: id, label, country
+* Filtremos por aquellos aeropuertos que corresponden a paises sudamericanos.
+```{r}
+nodos <- data %>% rename(id = iata, label = airport_name) %>% 
+  select(id, label, country) %>%
+  filter(country == "Argentina" | country == "Brazil" | country == "Chile" | country == "Ecuador" | country == "Paraguay" | country == "Colombia" | country == "Bolivia" | country == "Suriname" | country == "French Guiana" | country == "Peru" | country == "Uruguay" |  country == "Guyana" | country == "Venezuela")
+```
+
+4.a. Carguemos nuestro [dataset de rutas]("https://github.com/jpatokal/openflights/raw/master/data/routes.dat) que van a dar lugares a las edges.
+
+```{r}
+################ link
+fl<-  read.delim("https://github.com/jpatokal/openflights/raw/master/data/routes.dat", header = F, sep = ",")
+head(fl)
+```
+
+4.b. Modifiquemos el nombre de las columnas:
+
+```{r}
+fl <- fl %>% rename(
+  airline = V1, 
+  airline_id = V2, 
+  source_airport = V3,
+  source_airport_id = V4, 
+  destination_airport = V5,
+  destination_airport_id = V6, 
+  codeshare = V7, 
+  stops = V8,
+  equipment = V9
+)
+```
+
+5.a. Generemos el dataset de "links", donde la conexion este dada por el aeropuerto inicial ("source_airport") y  el aeropuerto de destino ("destination_airport"):
+
+(!Aclaracion: recordá cambiar el nombre de la columna para que queden como "from", "to". Y recordá sumar una columna adicional que contemple la cantidad de veces que hay una conexión entre dos aeropuertos:
+```{r}
+links  <- fl %>% group_by(source_airport, destination_airport) %>%
+  summarise(friendship = n()) %>%
+  rename(
+     from = source_airport,
+     to = destination_airport
+  )
+```
+
+5.b. Filtra de manera tal las rutas que únicamente queden las correspondientes a Ámerica del Sur.
+
+(!Recomendacion: sabias que se puede filtrar no sólo con *==*, *>=*, sino ademas con *%in%*?)
+```{r}
+condicion <- (links$from %in% nodos$id)  &  (links$to %in% nodos$id) 
+
+links <- links[condicion,]
+```
+
+6.a. Generá un objeto tipo "igraph" con los dataset de links y de nodos. 
+b. Preguntale a R si estamos frente a un tipo de objeto "igraph" 
+```{r}
+graph <- graph_from_data_frame(links, directed=TRUE, vertices=nodos)
+
+class(graph) #chequiemos que esta bien el tipo de grafico
+```
+
+7. Realicemos un gráfico de nuestra red con *plot()* eliminando el nombre del aeropuerto de la nube:
+```{r}
+plot(graph, vertex.label = NA)
+```
+
+
+8. Conozcamos algunos aspectos de nuestro grafo:
+
+a. Tamaño de nuestra nube en cantidad de nodos:
+```{r}
+gsize(graph)
+```
+
+b. ¿Es directo o indirecto?
+```{r}
+is.directed(graph)
+```
+c. Cuáles son los aeropuertos que estan más lejos en relacion a cantidad de conexiones? Podemos verlo con "farthest_vertices()"
+```{r}
+farthest_vertices(graph) 
+```
+d. ¿Cuál es el diametro de la red? ¿Que significa este número?
+```{r}
+diameter(graph)
+#que desde un nodo "x" hasta otro tengo que atravesar 9 nodos o menos.
+```
+
+
+i. Realicemos un gráfico que muestre la sigla de cada aeropuerto como label y agreguemos parámetros esteticos para que quede más lindo:
+```{r}
+nodos$label <- nodos$id
+graph.ind <- degree(graph, mode = c("in"))
+my.label<- names(graph.ind)
+my.label[which(log(graph.ind+1) < 3.4)]<- "" 
+my.label2<- my.label
+
+
+plot(graph,
+     vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+     vertex.label=my.label2, vertex.label.dist=2.1,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue")
+```
+
+9. LAYOUT:
+
+Realiza un gráfico para cada tipo de layout visto:
+
+9.a. Generemos un circulo con "layout_in_circle()":
+```{r}
+plot(graph, vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+     vertex.label=NA, vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue", vertex.label = my.label2, layout = layout_in_circle(graph))
+```
+
+9.b. Generemos una estructura jerarquica con "layout_as_tree()":
+```{r}
+m <- layout_as_tree(graph)
+plot(graph, vertex.label = my.label2,  vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black", vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue", layout = m)
+```
+
+9.c. Dejamos que R decida el mejor gráfico posible con "layout_nicely()":
+```{r}
+m1 <- layout_nicely(graph)
+plot(graph, vertex.label.color = "black", vertex.label = my.label2, 
+      vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+      vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue", layout = m1 )
+```
+
+9.d Realicemos un gráfico usando el algoritmo "Fruchterman Reigold" (layout.fruchterman.reingold):
+```{r}
+l <- layout.fruchterman.reingold(graph, grid = c("nogrid"))
+
+plot(graph, vertex.label = my.label2,   vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+     vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue", layout = l)
+```
+9.e. Generemos una nube random con la función "layout.kamada.kawai":
+```{r}
+plot(graph,
+     layout = layout.kamada.kawai,
+     vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+     vertex.label=NA, vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue")
+```
+
+9.f. Generemos una nube random con la función "layout_randomly()":
+```{r}
+m <- layout_randomly(graph)
+plot(graph, vertex.label = my.label2,  vertex.color="blue", vertex.size=7,
+     vertex.frame.color="gray", vertex.label.color="black",
+      vertex.label.dist=0.5,
+     edge.curved=0.2, edge.arrow.size=0.4,
+     edge.color="light blue", layout = m)
+```
+9.f. ¿Cuál crees es el mejor layout para el tipo de analisis que permite este grafo?
+
+
+11. COMUNIDADES
+11.a. Mapiemos las diferentes comunidades usando *edge.betweenness.community()* y establezcamos un color a partir del mismo
+```{r}
+wc <- walktrap.community(graph)
+
+V(graph)$color <- membership(wc)
+# Determinamos que usuario pertenece a qué comunidad
+new.color<-data.frame(t(col2rgb(wc$membership)/255))
+new.color<-rgb(new.color, alpha=.6)
+
+plot(wc, graph, vertex.label = NA, vertex.color=new.color, vertex.size=sqrt(graph.ind)*2, edge.size = 0.5, edge.color = "grey")
+```
+
+11.c. Exportemos el archivo generado anteriormente en *jpeg()*:
+```{r}
+jpeg(file = "Network.jpg", width = 4000, height = 4000, units = "px", pointsize = 75, quality = 95, 
+     bg = "white", res = NA, family = "", restoreConsole = TRUE, type = c("windows", "cairo"))
+plot.igraph(graph, vertex.label=my.label2, layout=l, vertex.size=sqrt(graph.ind)*3, vertex.label.color="Black",
+            vertex.color=new.color, vertex.frame.color=new.color, edge.width= .01, edge.arrow.size=.2, 
+            vertex.label.cex=.5,  
+            edge.curved=TRUE, vertex.label.dist=rnorm(length(graph.ind),.9,.03))
+dev.off()
+```
+
+13.a. Hagamos un grafico interactivo con *VisNetwork*:
+```{r}
+library(visNetwork)
+
+visNetwork(nodos, links) %>% 
+  visIgraphLayout() %>%
+  visNodes(
+    shape = "dot",
+    color = list(
+      background = "#0085AF",
+      border = "#013848",
+      highlight = "#FF8000"
+    ),
+    shadow = list(enabled = TRUE, size = 10)
+  ) %>%
+  visEdges(
+    shadow = FALSE,
+    color = list(color = "#0085AF", highlight = "#C62F4B")
+  ) %>%
+  visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T),
+             selectedBy = "group") %>% 
+  visLayout(randomSeed = 11)
+```
+
+
+## threejs
+14. Hagamos una ultima nube con la funcion *graphjs*:
+
+```{r}
+library(threejs)
+library(htmlwidgets)
+gjs.an <- graphjs(graph, bg="gray10", showLabels=F, stroke=F, 
+                   layout_with_fr(g,  dim=3),
+                  vertex.color=new.color,
+                  main="Network de rutas frecuentes entre aeropuertos" )
+gjs.an
+saveWidget(gjs.an, file="Dolar-Network-gjs-an.html")
+browseURL("Media-Network-gjs-an.html")
+
+```
+
