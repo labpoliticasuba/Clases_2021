@@ -1,6 +1,6 @@
 ---
 title: "codigo_ejercicios_sin_resolver"
-author: "guada"
+author: "Laboratorio de Politicas Públicas"
 date: "22/9/2020"
 output: html_document
 ---
